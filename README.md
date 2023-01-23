@@ -3,3 +3,8 @@
 
 # PistonDB
 The db that brings all the heat.
+
+## Development
+
+* `mvn spotless:check` to check if formatting is correct.
+* `mvn spotless:apply` to apply formatting to included files.
