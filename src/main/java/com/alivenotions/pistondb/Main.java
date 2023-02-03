@@ -1,8 +1,7 @@
 package com.alivenotions.pistondb;
 
-/** Hello world! */
-public class App {
+public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        System.out.println("I'm just a good horse");
     }
 }
