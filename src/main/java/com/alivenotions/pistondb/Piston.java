@@ -12,19 +12,18 @@ public class Piston {
         KeyDir new_key_dir = new KeyDir();
         db.key_dir = new_key_dir;
 
-        System.out.println("opened a new pistondb");
         return db;
     }
 
-    public byte[] get(byte[] key) throws IOException {
-        Optional<byte[]> result = key_dir.get(key);
+    public ByteString get(ByteString key) throws IOException {
+        Optional<ByteString> result = key_dir.get(key);
         if (result.isEmpty()) {
             return null;
         }
         return result.get();
     }
 
-    public void put(byte[] key, byte[] value) {
+    public void put(ByteString key, ByteString value) {
         key_dir.put(key, value);
     }
 }
