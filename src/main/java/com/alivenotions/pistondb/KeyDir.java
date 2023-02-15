@@ -1,12 +1,11 @@
 package com.alivenotions.pistondb;
 
+import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class KeyDir {
-    // TODO: Move to ByteString from com.google.protobuf.ByteString
-    // https://stackoverflow.com/questions/29018411/google-protobuf-bytestring-vs-byte
     Map<ByteString, ByteString> map = new HashMap<ByteString, ByteString>();
 
     public boolean put(ByteString key, ByteString value) {
