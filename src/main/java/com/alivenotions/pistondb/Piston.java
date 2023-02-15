@@ -1,5 +1,6 @@
 package com.alivenotions.pistondb;
 
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.Optional;
 
