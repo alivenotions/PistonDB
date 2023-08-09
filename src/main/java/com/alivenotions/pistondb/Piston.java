@@ -5,19 +5,19 @@ import java.io.IOException;
 import java.util.Optional;
 
 public class Piston {
-    KeyDir key_dir;
+    KeyDir keyDir;
 
     public static Piston open() {
         Piston db = new Piston();
 
-        KeyDir new_key_dir = new KeyDir();
-        db.key_dir = new_key_dir;
+        KeyDir newKeyDir = new KeyDir();
+        db.keyDir = newKeyDir;
 
         return db;
     }
 
     public ByteString get(ByteString key) throws IOException {
-        Optional<ByteString> result = key_dir.get(key);
+        Optional<ByteString> result = keyDir.get(key);
         if (result.isEmpty()) {
             return null;
         }
@@ -25,6 +25,9 @@ public class Piston {
     }
 
     public void put(ByteString key, ByteString value) {
-        key_dir.put(key, value);
+        // Write to file -> pos, fileId
+        // Create a DirEntry
+        // Write to keyDir
+        keyDir.put(key, value);
     }
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class KeyDir {
-    Map<ByteString, ByteString> map = new HashMap<ByteString, ByteString>();
+    Map<ByteString, ByteString> map = new HashMap<>();
 
     public boolean put(ByteString key, ByteString value) {
         map.put(key, value);
