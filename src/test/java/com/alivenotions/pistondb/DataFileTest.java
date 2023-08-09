@@ -1,38 +1,63 @@
 package com.alivenotions.pistondb;
 
+import static org.junit.Assert.*;
+
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.IOException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class DataFileTest {
 
-  @Test
-  public void testCreateAndWrite() throws IOException {
-    File directory = new File("data");
-    DataFile dataFile = DataFile.create(directory);
+    private DataFile dataFile;
+    private static final String TEST_PATH = "src/test/data";
 
-    ByteString key = ByteString.copyFromUtf8("key");
-    ByteString value = ByteString.copyFromUtf8("value");
+    @Before
+    public void setup() throws IOException {
+        File dataDir = new File(TEST_PATH);
+        dataDir.mkdirs();
 
-    DirEntry dirEntry = dataFile.write(key, value);
+        dataFile = DataFile.create(dataDir);
+    }
 
-    assertNotNull(dirEntry);
-    assertEquals(key.size(), dirEntry.valueSize());
-  }
+    @After
+    public void teardown() throws IOException, InterruptedException {
+        if (dataFile != null) {
+            dataFile.close();
+        }
+        removeDataDir();
+    }
 
-  @Test
-  public void testOpenAndWrite() throws IOException {
-    File file = new File("data/123456.data"); // Assuming the file exists
-    DataFile dataFile = DataFile.open(file);
+    private void removeDataDir() throws IOException, InterruptedException {
+        Process p = Runtime.getRuntime().exec(new String[] {"rm", "-Rf", TEST_PATH});
+        p.waitFor();
+    }
 
-    ByteString key = ByteString.copyFromUtf8("key");
-    ByteString value = ByteString.copyFromUtf8("value");
+    @Test
+    public void testCreateAndWrite() throws IOException {
+        ByteString key = ByteString.copyFromUtf8("key");
+        ByteString value = ByteString.copyFromUtf8("value");
 
-    DirEntry dirEntry = dataFile.write(key, value);
+        DirEntry dirEntry = dataFile.write(key, value);
 
-    assertNotNull(dirEntry);
-    assertEquals(key.size(), dirEntry.valueSize());
-  }
+        assertNotNull(dirEntry);
+        assertEquals(value.size(), dirEntry.valueSize());
+    }
+
+    @Test
+    public void testOpenAndWrite() throws IOException {
+        File file = new File(TEST_PATH + "/123456.data");
+        file.createNewFile();
+        DataFile dataFile = DataFile.open(file);
+
+        ByteString key = ByteString.copyFromUtf8("key");
+        ByteString value = ByteString.copyFromUtf8("value");
+
+        DirEntry dirEntry = dataFile.write(key, value);
+
+        assertNotNull(dirEntry);
+        assertEquals(value.size(), dirEntry.valueSize());
+    }
 }

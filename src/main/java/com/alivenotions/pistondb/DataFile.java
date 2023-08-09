@@ -40,8 +40,9 @@ public class DataFile implements AutoCloseable {
             throw new IllegalArgumentException("Invalid directory: " + directory.getAbsolutePath());
         }
 
-        File file = null;
+        File file;
         int timestamp = getTimestamp();
+        System.out.println("timestamp:" + timestamp);
 
         // Woah! when was the last time a do-while was caught in the wild!
         do {
@@ -58,7 +59,8 @@ public class DataFile implements AutoCloseable {
         int timestamp = getTimestamp(fileName);
 
         FileChannel readChannel = new RandomAccessFile(fileName, "r").getChannel();
-        return new DataFile(timestamp, fileName, null, readChannel);
+        FileChannel writeChannel = new FileOutputStream(fileName, true).getChannel();
+        return new DataFile(timestamp, fileName, readChannel, writeChannel);
     }
 
     public DirEntry write(final ByteString key, final ByteString value) throws IOException {
