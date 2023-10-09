@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.google.protobuf.ByteString;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
@@ -15,11 +16,11 @@ public class DataFileTest {
     private static final String TEST_PATH = "src/test/data";
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws FileNotFoundException {
         File dataDir = new File(TEST_PATH);
         dataDir.mkdirs();
 
-        dataFile = DataFile.create(dataDir);
+        dataFile = DataFile.init(dataDir);
     }
 
     @After
@@ -36,28 +37,12 @@ public class DataFileTest {
     }
 
     @Test
-    public void testCreateAndWrite() throws IOException {
+    public void testWrite() throws IOException {
         ByteString key = ByteString.copyFromUtf8("key");
         ByteString value = ByteString.copyFromUtf8("value");
 
-        DirEntry dirEntry = dataFile.write(key, value);
+        long offset = dataFile.write(key, value, 1696808073);
 
-        assertNotNull(dirEntry);
-        assertEquals(value.size(), dirEntry.valueSize());
-    }
-
-    @Test
-    public void testOpenAndWrite() throws IOException {
-        File file = new File(TEST_PATH + "/123456.data");
-        file.createNewFile();
-        DataFile dataFile = DataFile.open(file);
-
-        ByteString key = ByteString.copyFromUtf8("key");
-        ByteString value = ByteString.copyFromUtf8("value");
-
-        DirEntry dirEntry = dataFile.write(key, value);
-
-        assertNotNull(dirEntry);
-        assertEquals(value.size(), dirEntry.valueSize());
+        assertEquals(offset, 24);
     }
 }

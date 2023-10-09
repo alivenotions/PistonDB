@@ -1,7 +1,6 @@
 package com.alivenotions.pistondb;
 
 import com.google.protobuf.ByteString;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -10,12 +9,11 @@ public class Piston {
     KeyDir keyDir;
     DataFile dataFile;
 
-    public static Piston open() throws IOException {
+    public static Piston open(final File directory) throws IOException {
         Piston db = new Piston();
-        db.dataFile = DataFile.create(new File("/tmp"));
+        db.dataFile = DataFile.init(directory);
 
-        KeyDir newKeyDir = new KeyDir();
-        db.keyDir = newKeyDir;
+        db.keyDir = new KeyDir();
 
         return db;
     }
@@ -29,7 +27,13 @@ public class Piston {
     }
 
     public void put(ByteString key, ByteString value) throws IOException {
-        DirEntry dirEntry = dataFile.write(key, value);
+        int timestamp = DataFile.getTimestamp();
+        long writeOffset = dataFile.write(key, value, timestamp);
+        DirEntry dirEntry = new DirEntry(dataFile.toString(), writeOffset, timestamp, value.size());
         keyDir.put(key, dirEntry);
+    }
+
+    public void close() throws IOException {
+        dataFile.close();
     }
 }
