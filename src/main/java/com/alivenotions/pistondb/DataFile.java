@@ -8,67 +8,54 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Objects;
 
 public class DataFile implements AutoCloseable {
     // CRC (4) + TIMESTAMP(4) + KEYSIZE(4) + VALUESIZE(4)
     final int HEADER_SIZE = 16;
-    private final int timestamp;
-    private final File fileName;
     private FileChannel readChannel;
     private FileChannel writeChannel;
     // Should this be AtomicLong? or volatile? 🤷
     private long offset;
 
-    private DataFile(
-            final int timestamp,
-            final File fileName,
-            final FileChannel readChannel,
-            final FileChannel writeChannel)
-            throws IOException {
-        this.timestamp = timestamp;
-        this.fileName = fileName;
+    private DataFile(final FileChannel readChannel, final FileChannel writeChannel) {
         this.readChannel = readChannel;
         this.writeChannel = writeChannel;
         // FIXME: I really don't like that I have to do this.
         // Is there a better way to do this? It will throw an IOException if someone
         // passed a null readchannel.
-        this.offset = readChannel.size();
+        try {
+            this.offset = readChannel.size();
+        } catch (IOException e) {
+            throw new Error(
+                    "Error trying to read the size of read channel. Hopefully a better way to"
+                            + " handle this is coming");
+        }
     }
 
-    static DataFile create(final File directory) throws IOException {
+    @SuppressWarnings("resource")
+    static DataFile init(final File directory) throws FileNotFoundException {
         if (!directory.exists() || !directory.isDirectory()) {
             throw new IllegalArgumentException("Invalid directory: " + directory.getAbsolutePath());
         }
 
         File file;
         int timestamp = getTimestamp();
-        System.out.println("timestamp:" + timestamp);
 
-        // Woah! when was the last time a do-while was caught in the wild!
         do {
             file = getFilename(directory, timestamp++);
         } while (file.exists());
 
+        // FIXME: Switching the order causes a FileNotFoundException. Why? And simplify it.
         FileChannel writeChannel = new FileOutputStream(file, true).getChannel();
         FileChannel readChannel = new RandomAccessFile(file, "r").getChannel();
 
-        return new DataFile(timestamp, file, readChannel, writeChannel);
+        return new DataFile(readChannel, writeChannel);
     }
 
-    static DataFile open(final File fileName) throws FileNotFoundException, IOException {
-        int timestamp = getTimestamp(fileName);
+    public long write(final ByteString key, final ByteString value, final int timestamp)
+            throws IOException {
 
-        FileChannel readChannel = new RandomAccessFile(fileName, "r").getChannel();
-        FileChannel writeChannel = new FileOutputStream(fileName, true).getChannel();
-        return new DataFile(timestamp, fileName, readChannel, writeChannel);
-    }
-
-    public DirEntry write(final ByteString key, final ByteString value) throws IOException {
-        if (writeChannel == null) {
-            throw new IllegalStateException("Data file doesn't have an open channel for writing");
-        }
-
-        int timestamp = getTimestamp();
         int keySize = key.size();
         int valueSize = value.size();
 
@@ -79,20 +66,20 @@ public class DataFile implements AutoCloseable {
         header.putInt(4, timestamp);
         header.putInt(8, keySize);
         header.putInt(12, valueSize);
-        header.flip();
 
         ByteBuffer keyBuffer = key.asReadOnlyByteBuffer();
         ByteBuffer valueBuffer = value.asReadOnlyByteBuffer();
-
         ByteBuffer[] dataRecord = new ByteBuffer[] {header, keyBuffer, valueBuffer};
-        int entrySize = HEADER_SIZE + keySize + valueSize;
-        synchronized (writeChannel) {
-            writeChannel.write(dataRecord);
-            // does synchronized work like this?
-            offset += entrySize;
+
+        synchronized (Objects.requireNonNull(writeChannel)) {
+            // We are using putInt which is an absolute operation, and they don't affect position.
+            // Therefore, we do not need to call flip before we write (yay).
+            final long bytesWritten = writeChannel.write(dataRecord);
+            offset += bytesWritten;
+            writeChannel.force(true);
         }
 
-        return new DirEntry(fileName.toString(), offset, timestamp, valueSize);
+        return offset;
     }
 
     @Override

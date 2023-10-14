@@ -6,14 +6,13 @@ import java.util.Map;
 import java.util.Optional;
 
 public class KeyDir {
-    Map<ByteString, ByteString> map = new HashMap<>();
+    Map<ByteString, DirEntry> map = new HashMap<>();
 
-    public boolean put(ByteString key, ByteString value) {
+    public void put(ByteString key, DirEntry value) {
         map.put(key, value);
-        return true;
     }
 
-    public Optional<ByteString> get(ByteString key) {
+    public Optional<DirEntry> get(ByteString key) {
         return Optional.ofNullable(map.get(key));
     }
 }
