@@ -8,9 +8,8 @@ import java.util.Optional;
 public class KeyDir {
     Map<ByteString, DirEntry> map = new HashMap<>();
 
-    public boolean put(ByteString key, DirEntry value) {
+    public void put(ByteString key, DirEntry value) {
         map.put(key, value);
-        return true;
     }
 
     public Optional<DirEntry> get(ByteString key) {

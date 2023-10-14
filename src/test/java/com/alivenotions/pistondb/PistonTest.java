@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import com.google.protobuf.ByteString;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
@@ -12,10 +11,11 @@ import org.junit.Test;
 
 public class PistonTest {
     private static final String TEST_PATH = "src/test/data";
+    private static final File dataDir = new File(TEST_PATH);
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Before
-    public void setup() throws FileNotFoundException {
-        File dataDir = new File(TEST_PATH);
+    public void setup() {
         dataDir.mkdirs();
     }
 
@@ -33,23 +33,10 @@ public class PistonTest {
     public void testOpen() throws IOException {
         Piston db = Piston.open(new File(TEST_PATH));
         assertNotNull(db);
+        db.close();
     }
 
-    //    @Test
-    public void shouldStoreTheValueCorrectly() throws IOException {
-        Piston db = Piston.open(new File(TEST_PATH));
-        ByteString key = ByteString.copyFromUtf8("hello");
-        ByteString value = ByteString.copyFromUtf8("okay");
-        db.put(key, value);
-
-        ByteString k2 = ByteString.copyFromUtf8("hello");
-        ByteString res = db.get(k2);
-        String str = res.toStringUtf8();
-
-        assertEquals("okay", str);
-    }
-
-    //    @Test
+    // @Test
     public void shouldNotReturnGarbageForNonExistentKey() throws IOException {
         Piston db = Piston.open(new File(TEST_PATH));
         ByteString key = ByteString.copyFromUtf8("hello");

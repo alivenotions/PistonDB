@@ -66,17 +66,17 @@ public class DataFile implements AutoCloseable {
         header.putInt(4, timestamp);
         header.putInt(8, keySize);
         header.putInt(12, valueSize);
-        header.flip();
 
         ByteBuffer keyBuffer = key.asReadOnlyByteBuffer();
         ByteBuffer valueBuffer = value.asReadOnlyByteBuffer();
-
         ByteBuffer[] dataRecord = new ByteBuffer[] {header, keyBuffer, valueBuffer};
-        int entrySize = HEADER_SIZE + keySize + valueSize;
+
         synchronized (Objects.requireNonNull(writeChannel)) {
-            writeChannel.write(dataRecord);
-            // does synchronized work like this?
-            offset += entrySize;
+            // We are using putInt which is an absolute operation, and they don't affect position.
+            // Therefore, we do not need to call flip before we write (yay).
+            final long bytesWritten = writeChannel.write(dataRecord);
+            offset += bytesWritten;
+            writeChannel.force(true);
         }
 
         return offset;
