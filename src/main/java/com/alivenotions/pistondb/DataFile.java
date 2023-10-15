@@ -12,7 +12,11 @@ import java.util.Objects;
 
 public class DataFile implements AutoCloseable {
     // CRC (4) + TIMESTAMP(4) + KEYSIZE(4) + VALUESIZE(4)
-    final int HEADER_SIZE = 16;
+    static final int HEADER_SIZE = 16;
+    static final int CRC_OFFSET = 0;
+    static final int TIMESTAMP_OFFSET = 4;
+    static final int KEY_SIZE_OFFSET = 8;
+    static final int VALUE_SIZE_OFFSET = 12;
     private FileChannel readChannel;
     private FileChannel writeChannel;
     // Should this be AtomicLong? or volatile? 🤷
@@ -62,10 +66,10 @@ public class DataFile implements AutoCloseable {
         // TODO: Implement CRC
         int crc = 0xffff;
         ByteBuffer header = ByteBuffer.allocate(HEADER_SIZE);
-        header.putInt(0, crc);
-        header.putInt(4, timestamp);
-        header.putInt(8, keySize);
-        header.putInt(12, valueSize);
+        header.putInt(CRC_OFFSET, crc);
+        header.putInt(TIMESTAMP_OFFSET, timestamp);
+        header.putInt(KEY_SIZE_OFFSET, keySize);
+        header.putInt(VALUE_SIZE_OFFSET, valueSize);
 
         ByteBuffer keyBuffer = key.asReadOnlyByteBuffer();
         ByteBuffer valueBuffer = value.asReadOnlyByteBuffer();
@@ -84,13 +88,19 @@ public class DataFile implements AutoCloseable {
     }
 
     public ByteString read(final long offset) throws IOException {
+        if (offset < 0) {
+            throw new IllegalArgumentException("offset cannot be negative");
+        }
         ByteBuffer header = ByteBuffer.allocate(HEADER_SIZE);
         readChannel.read(header, offset);
-        int keySize = header.getInt(8);
-        int valueSize = header.getInt(12);
+
+        int keySize = header.getInt(KEY_SIZE_OFFSET);
+        int valueSize = header.getInt(VALUE_SIZE_OFFSET);
         ByteBuffer value = ByteBuffer.allocate(valueSize);
         readChannel.read(value, offset + HEADER_SIZE + keySize);
-        return ByteString.copyFrom(value.array());
+
+        value.flip();
+        return ByteString.copyFrom(value);
     }
 
     @Override
