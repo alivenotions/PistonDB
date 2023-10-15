@@ -71,6 +71,7 @@ public class DataFile implements AutoCloseable {
         ByteBuffer valueBuffer = value.asReadOnlyByteBuffer();
         ByteBuffer[] dataRecord = new ByteBuffer[] {header, keyBuffer, valueBuffer};
 
+        final long head = offset;
         synchronized (Objects.requireNonNull(writeChannel)) {
             // We are using putInt which is an absolute operation, and they don't affect position.
             // Therefore, we do not need to call flip before we write (yay).
@@ -79,7 +80,17 @@ public class DataFile implements AutoCloseable {
             writeChannel.force(true);
         }
 
-        return offset;
+        return head;
+    }
+
+    public ByteString read(final long offset) throws IOException {
+        ByteBuffer header = ByteBuffer.allocate(HEADER_SIZE);
+        readChannel.read(header, offset);
+        int keySize = header.getInt(8);
+        int valueSize = header.getInt(12);
+        ByteBuffer value = ByteBuffer.allocate(valueSize);
+        readChannel.read(value, offset + HEADER_SIZE + keySize);
+        return ByteString.copyFrom(value.array());
     }
 
     @Override

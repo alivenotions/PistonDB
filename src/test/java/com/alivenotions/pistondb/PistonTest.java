@@ -36,11 +36,22 @@ public class PistonTest {
         db.close();
     }
 
-    // @Test
+    @Test
+    public void shouldWriteAndReadCorrectValue() throws IOException {
+        Piston db = Piston.open(new File(TEST_PATH));
+        ByteString key = ByteString.copyFromUtf8("hello");
+        ByteString value = ByteString.copyFromUtf8("world");
+        db.put(key, value);
+
+        ByteString res = db.get(key).orElse(ByteString.empty());
+        assertEquals("world", res.toStringUtf8());
+    }
+
+    @Test
     public void shouldNotReturnGarbageForNonExistentKey() throws IOException {
         Piston db = Piston.open(new File(TEST_PATH));
         ByteString key = ByteString.copyFromUtf8("hello");
-        ByteString res = db.get(key);
+        ByteString res = db.get(key).orElse(null);
         assertNull(res);
     }
 }

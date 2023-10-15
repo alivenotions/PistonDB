@@ -61,7 +61,7 @@ public class DataFileTest {
         ByteString value = ByteString.copyFromUtf8("value");
 
         long offset = dataFile.write(key, value, 1696808073);
-        assertEquals(offset, 24);
+        assertEquals(offset, 0);
     }
 
     @Test

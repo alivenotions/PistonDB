@@ -18,12 +18,16 @@ public class Piston {
         return db;
     }
 
-    public ByteString get(ByteString key) throws IOException {
+    public Optional<ByteString> get(ByteString key) {
         Optional<DirEntry> result = keyDir.get(key);
-        if (result.isEmpty()) {
-            return null;
-        }
-        return ByteString.empty();
+        return result.map(
+                r -> {
+                    try {
+                        return dataFile.read(r.offset());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     public void put(ByteString key, ByteString value) throws IOException {
