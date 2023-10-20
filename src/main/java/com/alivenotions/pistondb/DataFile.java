@@ -117,7 +117,7 @@ public class DataFile implements AutoCloseable {
         }
     }
 
-    // TODO (alivenotions):Move the next three methods to a utility class?
+    // TODO (alivenotions): Move the next three methods to a utility class?
     static File getFilename(File dirname, int timestamp) {
         return new File(dirname, timestamp + ".data");
     }
