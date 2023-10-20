@@ -25,13 +25,11 @@ public class DataFile implements AutoCloseable {
     private DataFile(final FileChannel readChannel, final FileChannel writeChannel) {
         this.readChannel = readChannel;
         this.writeChannel = writeChannel;
-        // FIXME: I really don't like that I have to do this.
-        // Is there a better way to do this? It will throw an IOException if someone
-        // passed a null readchannel.
+
         try {
             this.offset = readChannel.size();
         } catch (IOException e) {
-            throw new Error(
+            throw new IllegalArgumentException(
                     "Error trying to read the size of read channel. Hopefully a better way to"
                             + " handle this is coming");
         }
@@ -119,6 +117,7 @@ public class DataFile implements AutoCloseable {
         }
     }
 
+    // TODO (alivenotions):Move the next three methods to a utility class?
     static File getFilename(File dirname, int timestamp) {
         return new File(dirname, timestamp + ".data");
     }
